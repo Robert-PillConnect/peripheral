@@ -30,7 +30,7 @@ jobs:
     strategy:
       matrix:
         board: [nrf52840dk_nrf52840]
-        loglevel: [debug, nodebug]
+        loglevel: [debug]
 
     steps:
       - uses: actions/checkout@v3

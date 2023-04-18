@@ -1,0 +1,66 @@
+name: Build and Release
+
+on:
+  push:
+    paths:
+      - "**.c"
+      - "**.h"
+      - "**.feature"
+      - "Kconfig"
+      - ".github/workflows/build-and-release.yaml"
+      - "west.yml"
+      - "*.conf"
+  repository_dispatch:
+    types:
+      - source-update
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: write
+  issues: write
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+
+    environment:
+      name: production
+
+    needs: [release-version, date-string]
+
+    strategy:
+      matrix:
+        board: [nrf52840dk_nrf52840]
+        loglevel: [debug, nodebug]
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          path: firmware
+
+      - name: Build with debug enabled
+        working-directory: firmware
+        if: matrix.loglevel == 'debug'
+        run: |
+          docker run --rm -v ${PWD}:/workdir/project nordicplayground/nrfconnect-sdk:main west build -p always -b ${{ matrix.board }} --build-dir /workdir/project/build
+
+      - name: Copy firmware
+        working-directory: firmware
+        run: |
+          cp build/zephyr/merged.hex ../
+          cp build/zephyr/app_signed.hex ../
+          cp build/zephyr/app_update.bin ../
+          cp firmware.conf ../
+
+      - uses: actions/upload-artifact@v3
+        with:
+          if-no-files-found: error
+          name:
+            ${{ matrix.board }}-${{ matrix.loglevel }}-${{
+            needs.date-string.outputs.dateAsString }}-${{ github.sha }}
+          path: |
+            merged.hex
+            app_signed.hex
+            app_update.bin
+            firmware.conf

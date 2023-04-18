@@ -363,12 +363,12 @@ void main(void)
 	bt_gatt_cb_register(&gatt_callbacks);
 	bt_conn_auth_cb_register(&auth_cb_display);
 
-	// err = smp_bt_register();
+	err = smp_bt_register();
 
-	// if (err)
-	// {
-	// 	printk("SMP BT register failed (err: %d)", err);
-	// }
+	if (err)
+	{
+		printk("SMP BT register failed (err: %d)", err);
+	}
 
 	vnd_ind_attr = bt_gatt_find_by_uuid(vnd_svc.attrs, vnd_svc.attr_count,
 					    &vnd_enc_uuid.uuid);
